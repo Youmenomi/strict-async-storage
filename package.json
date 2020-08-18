@@ -1,0 +1,81 @@
+{
+  "name": "strict-async-storage",
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [
+    "typescript",
+    "strict",
+    "async",
+    "storage",
+    "localStorage",
+    "switchable"
+  ],
+  "main": "dist/cjs/strict-async-storage.cjs.js",
+  "module": "dist/esm/strict-async-storage.esm.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build:js": "rollup -c",
+    "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+    "build": "tsc --noEmit && eslint --ext .ts,.js ./src && npm run build:js && npm run build:types",
+    "np": "np"
+  },
+  "lint-staged": {
+    "*.{ts,js}": [
+      "prettier --write",
+      "eslint --fix",
+      "jest --bail --findRelatedTests"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Youmenomi/strict-async-storage.git"
+  },
+  "author": "Dean Yao <youmenomi@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Youmenomi/strict-async-storage/issues"
+  },
+  "homepage": "https://github.com/Youmenomi/strict-async-storage#readme",
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-decorators": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "@nuxtjs/eslint-config-typescript": "^2.0.0",
+    "@rollup/plugin-babel": "^5.0.4",
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "@types/async": "^3.2.3",
+    "@types/jest": "^26.0.3",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.1.0",
+    "eslint": "^7.4.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "husky": "^4.2.5",
+    "jest": "^26.1.0",
+    "lint-staged": "^10.2.11",
+    "np": "^6.3.1",
+    "prettier": "^2.0.5",
+    "rollup": "^2.21.0",
+    "rollup-plugin-filesize": "^9.0.2",
+    "rollup-plugin-terser": "^6.1.0",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.6"
+  },
+  "dependencies": {
+    "auto-bind": "^4.0.0",
+    "custom-defaults": "0.0.2",
+    "p-each-series": "^2.1.0"
+  }
+}
