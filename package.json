@@ -21,7 +21,8 @@
     "build:js": "rollup -c",
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
     "build": "tsc --noEmit && eslint --ext .ts,.js ./src && npm run build:js && npm run build:types",
-    "np": "np"
+    "release": "np",
+    "version": "npm run build"
   },
   "lint-staged": {
     "*.{ts,js}": [
