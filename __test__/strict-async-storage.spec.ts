@@ -39,8 +39,10 @@ function oneSetTest<TDriver extends DriverInterface = Storage>(
 ) {
   describe(testName, () => {
     restoreSaved();
-    beforeAll(async () => {
+
+    it('test init', async () => {
       await strictAsyncStorage.init();
+      expect(strictAsyncStorage.defaults).toEqual(defaults);
     });
 
     it('test length', async () => {
@@ -115,13 +117,20 @@ function oneSetTest<TDriver extends DriverInterface = Storage>(
 
     it('test dispose', () => {
       if (handleDispose) {
-        const handler = jest.fn();
+        const handler = jest.fn(() => {
+          expect(() =>
+            strictAsyncStorage.getItem(StorageName.user)
+          ).not.toThrowError();
+        });
         strictAsyncStorage.dispose(handler);
         expect(handler).toBeCalled();
       } else {
         strictAsyncStorage.dispose();
-        expect(strictAsyncStorage.length).toBe(0);
       }
+      expect(strictAsyncStorage.length).toBe(0);
+      expect(() => strictAsyncStorage.getItem(StorageName.user)).toThrowError(
+        RangeError
+      );
     });
   });
 }

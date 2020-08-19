@@ -20,7 +20,7 @@ export type StrictAsyncStorageOption<TDriver> = {
   driver?: TDriver | (() => TDriver);
 };
 
-export const defOption = {
+const defOption = {
   map: () => new Map(),
   driver: localStorage,
 };
@@ -57,41 +57,37 @@ export class StrictAsyncStorage<
     autoBind(this);
   }
 
-  protected setMap(key: string, value: any) {
-    this._map.set(key, value);
-  }
-
   async init() {
     await eachSeries(
       Object.keys(this._defaults) as TKey[],
       async (key: TKey) => {
         const value = await this._driver.getItem(key);
-        this.setMap(key, value === null ? Jclone(this._defaults[key]) : value);
+        this._map.set(
+          key,
+          value === null ? Jclone(this._defaults[key]) : value
+        );
       }
     );
   }
 
   getItem<T extends keyof TDefault & string>(key: T): TDefault[T] {
-    if (!this._map.has(key))
-      throw new RangeError('The key parameter is an invalid value');
+    this.checkItem(key);
 
     return this._map.get(key);
   }
 
   async setItem<T extends keyof TDefault & string>(key: T, value: TDefault[T]) {
-    if (!this._map.has(key))
-      throw new RangeError('The key parameter is an invalid value');
+    this.checkItem(key);
 
     if ((await this.getItem(key)) === value) return;
     if (value === null) value = this._defaults[key];
 
     await this._driver.setItem(key, value);
-    this.setMap(key, value);
+    this._map.set(key, value);
   }
 
   async resetItem<T extends keyof TDefault & string>(key: T) {
-    if (!this._map.has(key))
-      throw new RangeError('The key parameter is an invalid value');
+    this.checkItem(key);
 
     await this.setItem(key, this._defaults[key]);
     return this.getItem(key);
@@ -106,8 +102,23 @@ export class StrictAsyncStorage<
   }
 
   dispose(handler?: (driver: TDriver | Storage) => void) {
-    this._map.clear();
     if (handler) handler(this._driver);
+    this._map.clear();
+  }
+
+  get defaults() {
+    return this._defaults;
+  }
+
+  hasItem(key: any) {
+    return this._map.has(key);
+  }
+
+  protected checkItem(key: any) {
+    if (!this.hasItem(key))
+      throw new RangeError(
+        'The key parameter is an invalid value. May be disposed or uninitialized.'
+      );
   }
 }
 
