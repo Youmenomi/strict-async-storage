@@ -1,10 +1,15 @@
 module.exports = {
+  plugins: ['prettier'],
   extends: [
-    '@nuxtjs/eslint-config-typescript',
+    'plugin:@typescript-eslint/recommended',
     'prettier',
     'prettier/standard',
     'plugin:prettier/recommended',
   ],
-  plugins: ['prettier'],
-  rules: {},
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/ban-types': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
+  },
 }
