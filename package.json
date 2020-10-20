@@ -8,7 +8,8 @@
     "async",
     "storage",
     "localStorage",
-    "switchable"
+    "switchable",
+    "remote"
   ],
   "main": "dist/cjs/strict-async-storage.cjs.js",
   "module": "dist/esm/strict-async-storage.esm.js",

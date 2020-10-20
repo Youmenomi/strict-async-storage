@@ -28,9 +28,6 @@ export class StrictAsyncStorage<
   protected setInitialized() {
     this._initialized = true;
   }
-  protected setDisposed() {
-    this._disposed = true;
-  }
 
   constructor(defaults: TDefault, driver: TDriver | Storage = localStorage) {
     this._defaults = defaults;
@@ -125,7 +122,7 @@ export class StrictAsyncStorage<
     //@ts-expect-error
     this._driver = undefined;
 
-    this.setDisposed();
+    this._disposed = true;
   }
 
   get defaults() {

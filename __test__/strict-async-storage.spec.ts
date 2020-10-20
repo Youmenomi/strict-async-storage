@@ -35,7 +35,7 @@ describe('strict-async-storage', () => {
       // disableErrorBoundaries: true,
     });
 
-    let strictAsyncStorage: StrictAsyncStorage<
+    let storage: StrictAsyncStorage<
       {
         user: string;
         no: number;
@@ -50,7 +50,7 @@ describe('strict-async-storage', () => {
     beforeEach(async () => {
       restoreSaved();
 
-      strictAsyncStorage = makeObservable(
+      storage = makeObservable(
         new StrictAsyncStorage(defaults, new AsyncDriver()),
         {
           //@ts-expect-error
@@ -60,20 +60,18 @@ describe('strict-async-storage', () => {
           setMap: action,
           batchMap: action,
           setInitialized: action,
-          setDisposed: action,
+          dispose: action,
         }
       );
-      await strictAsyncStorage.initialize();
+      await storage.initialize();
 
       view = jest.fn(() => {
         try {
-          return `user:${strictAsyncStorage.getItem(
+          return `user:${storage.getItem(
             StorageName.user
-          )},no:${strictAsyncStorage.getItem(
-            StorageName.no
-          )},enable:${strictAsyncStorage.getItem(
+          )},no:${storage.getItem(StorageName.no)},enable:${storage.getItem(
             StorageName.enable
-          )},data:${strictAsyncStorage.getItem(StorageName.data)},`;
+          )},data:${storage.getItem(StorageName.data)},`;
         } catch (error) {
           return error;
         }
@@ -85,7 +83,7 @@ describe('strict-async-storage', () => {
 
     it('test setItem', async () => {
       const user = 'test001';
-      await strictAsyncStorage.setItem(StorageName.user, user);
+      await storage.setItem(StorageName.user, user);
       expect(view).toBeCalledTimes(1);
       expect(view).lastReturnedWith(
         `user:${user},no:${123},enable:${defaults[StorageName.enable]},data:${{
@@ -94,7 +92,7 @@ describe('strict-async-storage', () => {
         }},`
       );
 
-      await strictAsyncStorage.setItem(StorageName.user, undefined as any);
+      await storage.setItem(StorageName.user, undefined as any);
       expect(view).toBeCalledTimes(2);
       expect(view).lastReturnedWith(
         `user:${undefined},no:${123},enable:${
@@ -105,7 +103,7 @@ describe('strict-async-storage', () => {
         }},`
       );
 
-      await strictAsyncStorage.setItem(StorageName.user, null as any);
+      await storage.setItem(StorageName.user, null as any);
       expect(view).toBeCalledTimes(3);
       expect(view).lastReturnedWith(
         `user:${defaults[StorageName.user]},no:${123},enable:${
@@ -117,13 +115,13 @@ describe('strict-async-storage', () => {
       );
 
       await expect(
-        strictAsyncStorage.setItem('other' as any, null as any)
+        storage.setItem('other' as any, null as any)
       ).rejects.toThrowError(RangeError);
       expect(view).toBeCalledTimes(3);
     });
 
     it('test resetItem', async () => {
-      await strictAsyncStorage.resetItem(StorageName.no);
+      await storage.resetItem(StorageName.no);
       expect(view).toBeCalledTimes(1);
       expect(view).lastReturnedWith(
         `user:${'user001'},no:${defaults[StorageName.no]},enable:${
@@ -134,14 +132,14 @@ describe('strict-async-storage', () => {
         }},`
       );
 
-      await expect(
-        strictAsyncStorage.resetItem('other' as any)
-      ).rejects.toThrowError(RangeError);
+      await expect(storage.resetItem('other' as any)).rejects.toThrowError(
+        RangeError
+      );
       expect(view).toBeCalledTimes(1);
     });
 
     it('test resetAll', async () => {
-      await strictAsyncStorage.resetAll();
+      await storage.resetAll();
       expect(view).toBeCalledTimes(1);
       expect(view).lastReturnedWith(
         `user:${defaults[StorageName.user]},no:${
@@ -151,111 +149,112 @@ describe('strict-async-storage', () => {
         },`
       );
     });
+
+    it('test dispose', async () => {
+      await storage.dispose();
+      expect(view).lastReturnedWith(
+        new Error(
+          '[strict-async-storage] Invalid operation. Not initialized yet, failed to initialize or has been disposed.'
+        )
+      );
+    });
   });
 });
 
 function runTest<TDriver extends DriverInterface = Storage>(
   testName: string | number | Function | jest.FunctionLike,
-  strictAsyncStorage: StrictAsyncStorage<typeof defaults, StorageName, TDriver>
+  storage: StrictAsyncStorage<typeof defaults, StorageName, TDriver>
 ) {
   describe(testName, () => {
     restoreSaved();
 
     it('test initialize', async () => {
-      expect(strictAsyncStorage.initialized).toBeFalsy();
-      await strictAsyncStorage.initialize();
-      expect(strictAsyncStorage.initialized).toBeTruthy();
-      expect(strictAsyncStorage.defaults).toEqual(defaults);
+      expect(storage.initialized).toBeFalsy();
+      await storage.initialize();
+      expect(storage.initialized).toBeTruthy();
+      expect(storage.defaults).toEqual(defaults);
 
-      await expect(
-        async () => await strictAsyncStorage.initialize()
-      ).rejects.toThrowError(
+      await expect(async () => await storage.initialize()).rejects.toThrowError(
         '[strict-async-storage] Invalid operation. This has been initialized.'
       );
     });
 
     it('test length', async () => {
-      expect(await strictAsyncStorage.length).toBe(defLen);
+      expect(await storage.length).toBe(defLen);
     });
 
     it('test getItem', () => {
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBe(
+      expect(storage.getItem(StorageName.user)).toBe(
         getSaved(StorageName.user)
       );
-      expect(strictAsyncStorage.getItem(StorageName.no)).toBe(
-        getSaved(StorageName.no)
-      );
-      expect(strictAsyncStorage.getItem(StorageName.enable)).toBe(
+      expect(storage.getItem(StorageName.no)).toBe(getSaved(StorageName.no));
+      expect(storage.getItem(StorageName.enable)).toBe(
         defaults[StorageName.enable]
       );
-      expect(strictAsyncStorage.getItem(StorageName.data)).toEqual(
+      expect(storage.getItem(StorageName.data)).toEqual(
         getSaved(StorageName.data)
       );
 
-      expect(() => strictAsyncStorage.getItem('other' as any)).toThrowError(
-        RangeError
-      );
+      expect(() => storage.getItem('other' as any)).toThrowError(RangeError);
     });
 
     it('test setItem', async () => {
       const user = 'test001';
-      await strictAsyncStorage.setItem(StorageName.user, user);
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBe(user);
+      await storage.setItem(StorageName.user, user);
+      expect(storage.getItem(StorageName.user)).toBe(user);
 
-      await strictAsyncStorage.setItem(StorageName.user, undefined as any);
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBeUndefined();
-      await strictAsyncStorage.setItem(StorageName.user, null as any);
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBe(
+      await storage.setItem(StorageName.user, undefined as any);
+      expect(storage.getItem(StorageName.user)).toBeUndefined();
+      await storage.setItem(StorageName.user, null as any);
+      expect(storage.getItem(StorageName.user)).toBe(
         defaults[StorageName.user]
       );
 
       await expect(
-        strictAsyncStorage.setItem('other' as any, null as any)
+        storage.setItem('other' as any, null as any)
       ).rejects.toThrowError(RangeError);
     });
 
     it('test resetItem', async () => {
-      expect(await strictAsyncStorage.resetItem(StorageName.user)).toBe(
+      expect(await storage.resetItem(StorageName.user)).toBe(
         defaults[StorageName.user]
       );
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBe(
+      expect(storage.getItem(StorageName.user)).toBe(
         defaults[StorageName.user]
       );
 
-      await expect(
-        strictAsyncStorage.resetItem('other' as any)
-      ).rejects.toThrowError(RangeError);
+      await expect(storage.resetItem('other' as any)).rejects.toThrowError(
+        RangeError
+      );
     });
 
     it('test resetAll', async () => {
-      await strictAsyncStorage.resetAll();
+      await storage.resetAll();
 
-      expect(strictAsyncStorage.getItem(StorageName.user)).toBe(
+      expect(storage.getItem(StorageName.user)).toBe(
         defaults[StorageName.user]
       );
-      expect(strictAsyncStorage.getItem(StorageName.no)).toBe(
-        defaults[StorageName.no]
-      );
-      expect(strictAsyncStorage.getItem(StorageName.enable)).toBe(
+      expect(storage.getItem(StorageName.no)).toBe(defaults[StorageName.no]);
+      expect(storage.getItem(StorageName.enable)).toBe(
         defaults[StorageName.enable]
       );
-      expect(strictAsyncStorage.getItem(StorageName.data)).toEqual(
+      expect(storage.getItem(StorageName.data)).toEqual(
         defaults[StorageName.data]
       );
     });
 
     it('test dispose', () => {
-      expect(strictAsyncStorage.disposed).toBeFalsy();
-      strictAsyncStorage.dispose();
-      expect(strictAsyncStorage.disposed).toBeTruthy();
-      expect(() => strictAsyncStorage.dispose()).toThrowError(
+      expect(storage.disposed).toBeFalsy();
+      storage.dispose();
+      expect(storage.disposed).toBeTruthy();
+      expect(() => storage.dispose()).toThrowError(
         '[strict-async-storage] Invalid operation. This has been disposed.'
       );
 
-      expect(() => strictAsyncStorage.length).toThrowError(
+      expect(() => storage.length).toThrowError(
         '[strict-async-storage] Invalid operation. Not initialized yet, failed to initialize or has been disposed.'
       );
-      expect(() => strictAsyncStorage.getItem(StorageName.user)).toThrowError(
+      expect(() => storage.getItem(StorageName.user)).toThrowError(
         '[strict-async-storage] Invalid operation. Not initialized yet, failed to initialize or has been disposed.'
       );
     });
